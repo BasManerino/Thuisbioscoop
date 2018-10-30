@@ -66,7 +66,7 @@ class FilmOverzichtBezoeker(Page):
            print ('Connecting to database...')
            connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
            db = connection['thuisbioscoop']
-           db.authenticate ("test123", "yourmom123")
+           db.authenticate ("test123", "wachtwoord123")
            if db.is_mongos:
                print ('Connection successful.')
                mycol = db["films"]
@@ -194,7 +194,7 @@ class LoginBezoeker (Page):
             print ('Connecting to database...')
             connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
             db = connection['thuisbioscoop']
-            db.authenticate ("test123", "yourmom123")
+            db.authenticate ("test123", "wachtwoord123")
             if db.is_mongos:
                 print ('Connection successful.')
                 mycol2 = db["films"]
@@ -274,7 +274,7 @@ class RegistrerenAanbieder(Page):
             salt = uuid.uuid4 ().hex
             return hashlib.sha256 (salt.encode () + password.encode ()).hexdigest () + ':' + salt
 
-        registerheaderlabel = tk.Label (master=self, text='Registreer Medewerkers', font='Helvetica 16 bold', height=2, fg="white", bg="purple")
+        registerheaderlabel = tk.Label (master=self, text='Registreer aanbieders', font='Helvetica 16 bold', height=2, fg="white", bg="purple")
         registerheaderlabel.pack ()
 
         def register(naam, adres, wachtwoord):
@@ -282,7 +282,7 @@ class RegistrerenAanbieder(Page):
             print ('Connecting to database...')
             connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
             db = connection['thuisbioscoop']
-            db.authenticate ("test123", "yourmom123")
+            db.authenticate ("test123", "wachtwoord123")
             if db.is_mongos:
                 print ('Connection successful.')
                 mycol = db["aanbieders"]
@@ -326,7 +326,7 @@ class LoginAanbieder(Page):
         Page.__init__ (self, *args, **kwargs)
         self.configure (bg="purple")
 
-        loginheaderlabel = tk.Label (master=self, text='Login Medewerkers', font='Helvetica 16 bold', height=2, bg="purple", fg="white")
+        loginheaderlabel = tk.Label (master=self, text='Login aanbieders', font='Helvetica 16 bold', height=2, bg="purple", fg="white")
         loginheaderlabel.pack ()
 
         naam = tk.Label (master=self, text='Voer uw hele naam in', height=2, bg="purple", fg="white")
@@ -367,7 +367,7 @@ class FilmOverzichtAanbieder(Page):
            def check(aanbieder):
                connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
                db = connection['thuisbioscoop']
-               db.authenticate ("test123", "yourmom123")
+               db.authenticate ("test123", "wachtwoord123")
                if db.is_mongos:
                    print ('Connection successful.')
                    mycol = db["aanbieders"]
@@ -381,7 +381,7 @@ class FilmOverzichtAanbieder(Page):
            naam, adres = check(naam_aanbieder)
            connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
            db = connection['thuisbioscoop']
-           db.authenticate ("test123", "yourmom123")
+           db.authenticate ("test123", "wachtwoord123")
            if db.is_mongos:
                print ('Connection successful.')
                mycol = db["films"]
@@ -442,7 +442,7 @@ class FilmOverzichtAanbieder(Page):
 
            connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
            db = connection['thuisbioscoop']
-           db.authenticate ("test123", "yourmom123")
+           db.authenticate ("test123", "wachtwoord123")
 
            mycol = db["films"]
 
@@ -535,7 +535,7 @@ class OverzichtVanBezoekers(Page):
            print ('Connecting to database...')
            connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
            db = connection['thuisbioscoop']
-           db.authenticate ("test123", "yourmom123")
+           db.authenticate ("test123", "wachtwoord123")
            if db.is_mongos:
                print ('Connection successful.')
                mycol = db["bezoekers"]
@@ -627,28 +627,28 @@ class MainView(tk.Frame):
                 films.add_command (label="Overzicht", command=p2.lift)
                 menuBezoeker.add_cascade (label="Films", menu=films)
 
-                medewerkers = tk.Menu (menuBezoeker, tearoff=0)
-                medewerkers.add_command (label="Inloggen", command=p5.lift)
-                medewerkers.add_command (label="Registreren", command=p4.lift)
-                menuBezoeker.add_cascade (label="Inloggen/registreren medewerkers", menu=medewerkers)
+                aanbieders = tk.Menu (menuBezoeker, tearoff=0)
+                aanbieders.add_command (label="Inloggen", command=p5.lift)
+                aanbieders.add_command (label="Registreren", command=p4.lift)
+                menuBezoeker.add_cascade (label="Inloggen/registreren aanbieders", menu=aanbieders)
 
                 root.config (menu=menuBezoeker)
 
             elif (menu == 1):
-                menuMedewerker = tk.Menu (root)
-                home = tk.Menu (menuMedewerker, tearoff=0)
+                menuaanbieder = tk.Menu (root)
+                home = tk.Menu (menuaanbieder, tearoff=0)
                 home.add_command (label="Home", command=p1.lift)
-                menuMedewerker.add_cascade (label="Home", menu=home)
+                menuaanbieder.add_cascade (label="Home", menu=home)
 
-                films = tk.Menu (menuMedewerker, tearoff=0)
+                films = tk.Menu (menuaanbieder, tearoff=0)
                 films.add_command (label="Bied een nieuwe film aan", command=p3.lift)
-                menuMedewerker.add_cascade (label="Films", menu=films)
+                menuaanbieder.add_cascade (label="Films", menu=films)
 
-                bezoekers = tk.Menu (menuMedewerker, tearoff=0)
+                bezoekers = tk.Menu (menuaanbieder, tearoff=0)
                 bezoekers.add_command (label="Overzicht van bezoekers", command=p6.lift)
-                menuMedewerker.add_cascade (label="Bezoekers", menu=bezoekers)
+                menuaanbieder.add_cascade (label="Bezoekers", menu=bezoekers)
 
-                root.config (menu=menuMedewerker)
+                root.config (menu=menuaanbieder)
 
             p1.show ()
 
@@ -664,7 +664,7 @@ class MainView(tk.Frame):
             print ('Connecting to database...')
             connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
             db = connection['thuisbioscoop']
-            db.authenticate ("test123", "yourmom123")
+            db.authenticate ("test123", "wachtwoord123")
             if db.is_mongos:
                 print ('Connection successful.')
                 mycol = db["aanbieders"]
