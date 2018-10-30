@@ -11,19 +11,15 @@ from pymongo import MongoClient
 from functools import partial
 import qrcode
 import random, string
+import hashlib
+import uuid
 
 root = tk.Tk ()
-
-def donothing():
-    print("Hello")
 
 global menu
 menu = 0
 
 global aanbieder
-
-def donothing():
-    print("Hello")
 
 class Page(tk.Frame):
     def __init__(self, *args, **kwargs):
@@ -53,6 +49,9 @@ class Homepage(Page):
 class FilmOverzichtBezoeker(Page):
    def __init__(self, film):
        Page.__init__(self, film)
+
+       container = tk.Frame (self)
+       container.pack (side="top", fill="both", expand=True)
 
        def download_cover(url, naam):
            name = (str (naam) + '.jpg')
@@ -96,9 +95,13 @@ class FilmOverzichtBezoeker(Page):
 
                row = 1
 
-               def get_film(film):
+               def get_film(film, starttijd, eindtijd):
                    global filmtitel
                    filmtitel = film
+                   global start
+                   start = starttijd
+                   global eind
+                   eind = eindtijd
                    p1.lift()
 
                for film in findStats:
@@ -117,7 +120,7 @@ class FilmOverzichtBezoeker(Page):
                    adres = tk.Label (frame, text=film['Adres'].encode ("utf-8"), font="Helvetica 18 bold", fg="white",
                                   bg="purple")
 
-                   action = partial(get_film,film['Titel'])
+                   action = partial(get_film,film['Titel'],film["Starttijd"],film["Eindtijd"])
                    button = tk.Button (frame, text='Reserveer', command=action)
 
                    cover.grid (row=row, column=1, sticky=tk.NW)
@@ -138,10 +141,7 @@ class FilmOverzichtBezoeker(Page):
                    """
                    row += 1
 
-       container = tk.Frame (self)
-       container.pack (side="top", fill="both", expand=True)
-
-       p1 = LoginBezoeker (self)
+       p1 = LoginBezoeker(self)
        p1.place (in_=container, x=0, y=0, relwidth=1, relheight=1)
 
        def myfunction(event):
@@ -188,7 +188,7 @@ class LoginBezoeker (Page):
 
         woordje = randomword(14)
 
-        def bezoeken(naam, email, film, word):
+        def bezoeken(naam, email, film, starttijd, eindtijd, word):
 
             # Create an image from the QR Code instance
             print ('Connecting to database...')
@@ -231,6 +231,10 @@ class LoginBezoeker (Page):
                 # img.save("image.jpeg")
                 img.save ("QR.jpg")
                 qrframe = tk.Frame (master=self)
+                codelabel = tk.Label (master=self, text="Code: " + data, background="purple", foreground="white")
+                codelabel.pack (pady=10, padx=10, )
+                tijdlabel = tk.Label (master=self, text="Speeltijd: " + starttijd + ' - ' + eindtijd, background="purple", foreground="white")
+                tijdlabel.pack (pady=10, padx=10, )
                 qrframe.pack (fill=None, expand=True, pady=10, padx=10)
                 img = ImageTk.PhotoImage (Image.open ("QR.jpg"))
                 cover = tk.Label (qrframe, image=img)
@@ -252,7 +256,7 @@ class LoginBezoeker (Page):
         emailEntry.pack (padx=10, pady=10)
 
         button = tk.Button (master=self, text='OK',
-                         command=lambda:bezoeken(naamEntry.get(), emailEntry.get(), filmtitel, woordje))
+                         command=lambda:[bezoeken(naamEntry.get(), emailEntry.get(), filmtitel, start, eind, woordje), button.destroy()])
         button.pack (pady=10)
 
         scancodetxt = tk.Label (master=self,
@@ -265,10 +269,16 @@ class RegistrerenAanbieder(Page):
         Page.__init__ (self, *args, **kwargs)
         self.configure(bg="purple")
 
+        def hash_password(password):
+            # uuid is used to generate a random number
+            salt = uuid.uuid4 ().hex
+            return hashlib.sha256 (salt.encode () + password.encode ()).hexdigest () + ':' + salt
+
         registerheaderlabel = tk.Label (master=self, text='Registreer Medewerkers', font='Helvetica 16 bold', height=2, fg="white", bg="purple")
         registerheaderlabel.pack ()
 
         def register(naam, adres, wachtwoord):
+            hashed_password = hash_password(wachtwoord)
             print ('Connecting to database...')
             connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
             db = connection['thuisbioscoop']
@@ -277,9 +287,17 @@ class RegistrerenAanbieder(Page):
                 print ('Connection successful.')
                 mycol = db["aanbieders"]
 
-                nosqlcharacter = {"Naam": naam, "Adres": adres, "Wachtwoord": wachtwoord}
+                nosqlcharacter = {"Naam": naam, "Adres": adres, "Wachtwoord": hashed_password}
 
                 mycol.insert_one (nosqlcharacter)
+
+                button = tk.Button (master=self, state=tk.DISABLED, text='Registreer',
+                                    command=lambda: register (naamEntry.get (), adresEntry.get (),
+                                                              wachtwoordEntry.get ()))
+                button.pack (pady=10)
+
+                melding = tk.Label (master=self, text='U bent registreerd, u kunt nu inloggen.', height=2, fg="white", bg="purple")
+                melding.pack ()
 
         naam = tk.Label (master=self, text='Voer uw hele naam in', height=2, fg="white", bg="purple")
         naam.pack ()
@@ -300,7 +318,7 @@ class RegistrerenAanbieder(Page):
         wachtwoordEntry.pack (padx=10, pady=10)
 
         button = tk.Button (master=self, text='Registreer',
-                         command=lambda: register (naamEntry.get (), adresEntry.get (), wachtwoordEntry.get ()))
+                         command=lambda:[register (naamEntry.get (), adresEntry.get (), wachtwoordEntry.get ()),button.destroy()])
         button.pack (pady=10)
 
 class LoginAanbieder(Page):
@@ -345,7 +363,7 @@ class FilmOverzichtAanbieder(Page):
 
        date = time.strftime ("%d-%m-%Y")
 
-       def bied_aan(titel, cover, genre, starttijd, eindtijd, naam_aanbieder, datum):
+       def bied_aan(titel, cover, genre, starttijd, eindtijd, naam_aanbieder, datum, row):
            def check(aanbieder):
                connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
                db = connection['thuisbioscoop']
@@ -372,6 +390,13 @@ class FilmOverzichtAanbieder(Page):
                    "Eindtijd": eindtijd, "Aanbieder": naam, "Adres": adres, "Datum": datum}
 
                mycol.insert_one (nosqlcharacter)
+
+
+               button = tk.Button (frame, text='Bied film aan', state=tk.DISABLED, bg="blue", fg="white")
+               button.grid(row=row, column=6, sticky=tk.NW)
+
+               melding = tk.Label (frame, text='De film is succesvol aangeboden.', height=2, fg="white", bg="purple")
+               melding.grid(row=row, column=7, sticky=tk.NW)
 
        def data(aanbieder):
            api_url = 'http://api.filmtotaal.nl/filmsoptv.xml?apikey=djg2nqcl4jpkwivqgjdox3klob4zyx3d&dag=' + str (
@@ -406,11 +431,14 @@ class FilmOverzichtAanbieder(Page):
            labeltitel = tk.Label (frame, text="Titel")
            labeltitel.grid (row=3, column=2, sticky=tk.NW)
 
-           labelgenre = tk.Label (frame, text="Genre")
-           labelgenre.grid (row=3, column=3, sticky=tk.NW)
+           labelstarttijd = tk.Label (frame, text="Starttijd")
+           labelstarttijd.grid (row=3, column=3, sticky=tk.NW)
+
+           labeleindtijd = tk.Label (frame, text="Eindtijd")
+           labeleindtijd.grid (row=3, column=4, sticky=tk.NW)
 
            labelkanaal = tk.Label (frame, text="Kanaal")
-           labelkanaal.grid (row=3, column=4, sticky=tk.NW)
+           labelkanaal.grid (row=3, column=5, sticky=tk.NW)
 
            connection = pymongo.MongoClient ('ds159489.mlab.com', 59489)
            db = connection['thuisbioscoop']
@@ -422,35 +450,39 @@ class FilmOverzichtAanbieder(Page):
                callstats = {"Titel": titel}
                findStats = mycol.find_one (callstats)
                if(findStats == None):
-                   button = tk.Button (frame, text='Bied film aan', command=action, bg="green", fg="white")
-                   button.grid (row=row, column=5, sticky=tk.NW)
+                   button = tk.Button (frame, text='Bied film aan', command=lambda:[action(), button.destroy()], bg="green", fg="white")
+                   button.grid (row=row, column=6, sticky=tk.NW)
                elif(findStats['Aanbieder'] == aanbieder):
-                   button = tk.Button (frame, text='Bied film aan', command=action, state=tk.DISABLED, bg="blue", fg="white")
-                   button.grid (row=row, column=5, sticky=tk.NW)
+                   button = tk.Button (frame, text='Bied film aan', state=tk.DISABLED, bg="blue", fg="white")
+                   button.grid (row=row, column=6, sticky=tk.NW)
                else:
-                   button = tk.Button (frame, text='Bied film aan', command=action, state=tk.DISABLED, bg="red", fg="white")
-                   button.grid (row=row, column=5, sticky=tk.NW)
+                   button = tk.Button (frame, text='Bied film aan', state=tk.DISABLED, bg="red", fg="white")
+                   button.grid (row=row, column=6, sticky=tk.NW)
 
 
 
            for film in filmXML['filmsoptv']['film']:
+               st = int (film['starttijd'])
+               starttijd = (datetime.utcfromtimestamp (st).strftime ('%H:%M'))
+
+               et = int (film['eindtijd'])
+               eindtijd = (datetime.utcfromtimestamp (et).strftime ('%H:%M'))
+
                titel = tk.Label (frame, text=film['titel'].encode ("utf-8"), font="Helvetica 18 bold", fg="white",
                               bg="purple")
                # canvas = Canvas (frame)
                img = ImageTk.PhotoImage (Image.open (download_cover (film['cover'], titel)))
                cover = tk.Label (frame, image=img)
                cover.image = img
-               genre = tk.Label (frame, text=film['genre'].encode ("utf-8"), font="Helvetica 18 bold", fg="white",
+               starttijdLabel = tk.Label (frame, text=starttijd.encode ("utf-8"), font="Helvetica 18 bold", fg="white",
                               bg="purple")
+               eindtijdLabel = tk.Label (frame, text=eindtijd.encode ("utf-8"), font="Helvetica 18 bold", fg="white",
+                                 bg="purple")
                zender = tk.Label (frame, text=film['zender'].encode ("utf-8"), font="Helvetica 18 bold", fg="white",
                                bg="purple")
-               st = int (film['starttijd'])
-               starttijd = (datetime.utcfromtimestamp (st).strftime ('%m-%d %H:%M'))
 
-               et = int (film['eindtijd'])
-               eindtijd = (datetime.utcfromtimestamp (et).strftime ('%m-%d %H:%M'))
                action_with_arg = partial (bied_aan, film['titel'], film['cover'], film['genre'], str (starttijd),
-                                          str (eindtijd), aanbieder, date)
+                                          str (eindtijd), aanbieder, date, row)
 
                action = partial(check_aanbieding,mycol, film['titel'], row, action_with_arg)
 
@@ -458,8 +490,9 @@ class FilmOverzichtAanbieder(Page):
 
                cover.grid (row=row, column=1, sticky=tk.NW)
                titel.grid (row=row, column=2, sticky=tk.NW)
-               genre.grid (row=row, column=3, sticky=tk.NW)
-               zender.grid (row=row, column=4, sticky=tk.NW)
+               starttijdLabel.grid (row=row, column=3, sticky=tk.NW)
+               eindtijdLabel.grid (row=row, column=4, sticky=tk.NW)
+               zender.grid (row=row, column=5, sticky=tk.NW)
 
                row += 1
 
@@ -559,6 +592,7 @@ class OverzichtVanBezoekers(Page):
        frame.bind ("<Configure>", myfunction)
 
        data ()
+
 class MainView(tk.Frame):
     global aanbieder
     aanbieder = None
@@ -618,6 +652,11 @@ class MainView(tk.Frame):
 
             p1.show ()
 
+        def check_password(hashed_password, user_password):
+            password, salt = hashed_password.split (':')
+            return password == hashlib.sha256 (salt.encode () + user_password.encode ()).hexdigest ()
+        self.configure(bg="purple")
+
         global login
         def login(naam, wachtwoord):
             global aanbieder
@@ -630,10 +669,10 @@ class MainView(tk.Frame):
                 print ('Connection successful.')
                 mycol = db["aanbieders"]
 
-                callstats = {"Naam": naam, "Wachtwoord": wachtwoord}
+                callstats = {"Naam": naam}
 
                 findStats = mycol.find_one(callstats)
-                if(findStats):
+                if(findStats and check_password (findStats["Wachtwoord"], wachtwoord)):
                     global menu
                     menu = 1
                     set_menu(self)
