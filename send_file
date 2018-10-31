@@ -1,0 +1,41 @@
+import socket
+#import RPi.GPIO as io
+#io.setmode(io.BCM)
+
+UDP_IP = "145.89.223.45"
+
+UDP_PORT = 5005
+
+MESSAGE = "Deur is open"
+#door_pin = 23
+
+#io.setup(door_pin, io.IN, pull_up_down=io.PUD_UP)
+
+
+#MESSAGE = "Deur is open"
+
+#while loop:
+ #   if io.input(door_pin):
+         #MESSAGE = "Deur open"
+  #      print(MESSAGE)
+   # else:
+    #    print("Deur is dicht!!")
+
+#time.sleep(1)
+
+
+
+print("UDP target IP:", UDP_IP)
+
+print("UDP target port:", UDP_PORT)
+
+print("message:", MESSAGE)
+
+sock = socket.socket(socket.AF_INET,  # Internet
+
+socket.SOCK_DGRAM)  # UDP
+
+
+sock.sendto(MESSAGE.encode(), (UDP_IP, UDP_PORT))
+sock.sendto(MESSAGE.encode(), (UDP_IP, UDP_PORT))
+sock.sendto('JFDHJD'.encode(), (UDP_IP, UDP_PORT))
