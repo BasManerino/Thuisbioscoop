@@ -6,4 +6,4 @@
 6. Download Python van hier: https://www.python.org/downloads/
 7. Run het Python installeer bestand. Zorg dat "Add Python[version] to PATH" AANGEVINKD staat. Laat de andere opties maar voor wat ze zijn.
 8. Start de opdrachtprompt op. Als u in de zoekoptie van uw computer intypt "Opdrachtprompt", zult u het vinden met een zwart vlak als plaatje.
-9. Typ in "python app.py". Dit zal de applicatie opstarten.
+9. Typ in "python app.py" en druk op enter. Dit zal de applicatie opstarten.
