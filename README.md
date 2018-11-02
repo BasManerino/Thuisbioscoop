@@ -1,3 +1,11 @@
+FILMPJE:
+
+https://www.youtube.com/watch?v=26uuaHsEZGA&feature=youtu.be
+
+-------------------------------------------------------------------------------------------
+
+OPSTART BESCRIJVING:
+
 1. Ga naar het app.py script.
 2. Ga naar de gebruikers map op uw computer (C:/gebruikers/[uw computer naam]/) en maak daar een map aan genaamd "thuisbioscoop" en sla deze map op.
 3. Maak een bestand op uw computer genaamd app.py. Zet dit bestand in de thuisbioscoop map die u zojuist heeft aangemaakt.
